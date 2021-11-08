@@ -14,9 +14,15 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+//A GET route to render the url submission form
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 //Another route to add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
