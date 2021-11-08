@@ -9,6 +9,11 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+//A new route handler for "/urls" with res.render() to pass the URL data to our template.
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
+});
 
 // Sending a simple string "Hello!"
 app.get("/", (req, res) => {
