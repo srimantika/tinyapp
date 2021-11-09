@@ -51,6 +51,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
+//Post Request for EDIT
+app.post("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  urlDatabase[shortURL] = req.body.newURL;
+  res.redirect('/urls');
+});
+
 //generates a Random String of 6 letters
 const generateRandomString = function() {
   let randomString = "";
