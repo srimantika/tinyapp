@@ -1,6 +1,5 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -33,6 +32,18 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
+//A GET route for Login
+//app.get("/login", (req, res) => {
+//  if (cookieHasUser(req.session.user_id)) {
+//    res.redirect("/urls");
+//  } else {
+//    let templateVars = {
+//      user: users[req.session.user_id],
+//    };
+//    res.render("urls_login", templateVars);
+//  }
+//});
+
 //Post Request receive form submission with randomly generated short url String
 app.post("/urls", (req, res) => {
   if (req.body.longURL === "") {
@@ -56,6 +67,13 @@ app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   urlDatabase[shortURL] = req.body.newURL;
   res.redirect('/urls');
+});
+
+//Post Request for Login
+app.post("/login", (req, res) => {
+const user_id = req.body.user_id;
+res.cookie(user_id); 
+res.redirect("/urls");
 });
 
 //generates a Random String of 6 letters
