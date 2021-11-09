@@ -44,6 +44,13 @@ app.post("/urls", (req, res) => {
   }
 });
 
+//Post Request for DELETE
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const idToDelete = req.params.shortURL;
+  delete urlDatabase[idToDelete];
+  res.redirect("/urls");
+});
+
 //generates a Random String of 6 letters
 const generateRandomString = function() {
   let randomString = "";
