@@ -6,6 +6,7 @@ const PORT = 8080; // default port 8080
 
 // Setting ejs as the view engine
 app.set("view engine", "ejs");
+// Set the body-parser
 app.use(bodyParser.urlencoded({extended: true}));
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -22,52 +23,43 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// A GET route to match and handle the Post request of ShortURL form submission
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+  if (urlDatabase[req.params.shortURL]) {
+    const longURL = urlDatabase[req.params.shortURL];
+    res.redirect(longURL);
+  } else {
+    res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.");
+  }
 });
 
-//Post Request with randonly generated short url String
+//Post Request receive form submission with randomly generated short url String
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  
-  res.redirect((`/urls/${shortURL}`));
-  //console.log(req.body);  // Log the POST request body to the console
-  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  if (req.body.longURL === "") {
+    res.status(404).send("It seems you forgot to input the URL. Please go back and re enter!");
+  } else {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = req.body.longURL;
+    res.redirect((`/urls/${shortURL}`));
+  }
 });
 
 //generates a Random String of 6 letters
-function generateRandomString() {
+const generateRandomString = function() {
   let randomString = "";
   for (let i = 0; i < 6; i++) {
     const randomCharCode = Math.floor(Math.random() * 26 + 97);
     const randomChar = String.fromCharCode(randomCharCode);
     randomString += randomChar;
   }
-return randomString;  
-}
+  return randomString;
+};
 //Another route to add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
-// Sending a simple string "Hello!"
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-// Sending JSON string : Representing the entire urlDatabase object
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-
-//Sending HTML : Response can contain HTML code, which would be rendered in the client browser
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
