@@ -23,16 +23,15 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
+  const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
 //Post Request with randonly generated short url String
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {
-    longURL: req.body.longURL
-  }
+  urlDatabase[shortURL] = req.body.longURL;
+  
   res.redirect((`/urls/${shortURL}`));
   //console.log(req.body);  // Log the POST request body to the console
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
@@ -50,7 +49,7 @@ return randomString;
 }
 //Another route to add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
