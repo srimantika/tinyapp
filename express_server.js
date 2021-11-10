@@ -126,7 +126,10 @@ app.post("/register", (req, res) => {
   const submittedPassword = req.body.password;
   if (!submittedEmail || !submittedPassword) {
   res.status(400).send("Please include a valid email and password to create an Account!");
-  } else {
+  } else if (emailHasUser(submittedEmail, users)) {
+  res.status(400).send("An account already exists for this email address!"); 
+  }
+  else {
   const newUserID = generateRandomString();
   users[newUserID] = {
     id: newUserID,
@@ -137,6 +140,16 @@ app.post("/register", (req, res) => {
     res.redirect("/urls"); 
  }   
 }); 
+
+/* Checks if given email corresponds to a user in a given database, returns true or false */
+const emailHasUser = function(email, userDatabase) {
+  for (const user in userDatabase) {
+    if (userDatabase[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+};
 
 //generates a Random String of 6 letters
 const generateRandomString = function () {
