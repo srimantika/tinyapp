@@ -88,13 +88,14 @@ app.get("/register", (req, res) => {
 
 //Post Request receive form submission with randomly generated short url String
 app.post("/urls", (req, res) => {
-  if (req.body.longURL === "") {
-    res.status(404).send("It seems you forgot to input the URL. Please go back and re enter!");
-  } else {
-    const shortURL = generateRandomString();
-    urlDatabase[shortURL] = req.body.longURL;
-    res.redirect((`/urls/${shortURL}`));
-  }
+
+if (req.cookies.user_id) {
+        const shortURL = generateRandomString();
+        urlDatabase[shortURL] = req.body.longURL;
+        res.redirect((`/urls/${shortURL}`));
+      } else {
+      res.status(401).send("You must be logged in to a valid account to create short URLs.");
+      }
 });
 
 //Post Request for DELETE
