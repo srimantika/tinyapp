@@ -53,6 +53,15 @@ app.get("/login", (req, res) => {
   //res.render("urls_new", templateVars);
 });
 
+//A GET route for Register
+app.get("/register", (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };  
+  res.render("urls_registration", templateVars); 
+});
+
 //Post Request receive form submission with randomly generated short url String
 app.post("/urls", (req, res) => {
   if (req.body.longURL === "") {
