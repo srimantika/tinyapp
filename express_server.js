@@ -69,7 +69,7 @@ app.get("/login", (req, res) => {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]]
   };  
-  //res.render("urls_new", templateVars);
+  res.render("urls_login", templateVars);
 });
 
 //A GET route for Register
@@ -110,15 +110,22 @@ app.post("/urls/:id", (req, res) => {
 
 //Post Request for Login
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  const email = req.body.email;
+  const password = req.body.password;
+  const pass = emailHasUser(email,users);
+  if (pass === false) {
+    res.status(403).send("There is no account associated with this email address");
+  } else {
+  const userID = userIdFromEmail(email, users);  
+  if (users[userID].password !== password){
+    res.status(403).send("Invalid Password!");
+  } else {
+  res.cookie("user_id", users[userID].id);
   res.redirect("/urls");
+   }
+  } 
 });
 
-//Post Request for Logout
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/urls");
-});
 
 //Post Request for Register
 app.post("/register", (req, res) => {
@@ -141,6 +148,11 @@ app.post("/register", (req, res) => {
  }   
 }); 
 
+//Post Request for Logout
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  res.redirect("/urls");
+});
 /* Checks if given email corresponds to a user in a given database, returns true or false */
 const emailHasUser = function(email, userDatabase) {
   for (const user in userDatabase) {
@@ -149,6 +161,15 @@ const emailHasUser = function(email, userDatabase) {
     }
   }
   return false;
+};
+
+/* Takes an email and userDatabase and returns the user ID for the user with the given email address */
+const userIdFromEmail = function(email, userDatabase) {
+  for (const user in userDatabase) {
+    if (userDatabase[user].email === email) {
+      return userDatabase[user].id;
+    }
+  }
 };
 
 //generates a Random String of 6 letters

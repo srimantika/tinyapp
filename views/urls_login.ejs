@@ -11,13 +11,11 @@
   </head>
 
   <body>
-
     <%- include('partials/_header') %>
-
     <main style="margin: 1em;">
-      <h3>Create Account</h3>
+      <h3>Login</h3>
       <br>
-      <form action="/register" method="POST">
+      <form action="/login" method="POST">
       
         <label for="email"><b>Email</b></label>
         <br>
@@ -29,7 +27,7 @@
       <input type="password" name="password"placeholder="Password">
       <br>
       <br>      
-      <button type="submit" class="btn btn-primary">Register</button>
+      <button type="submit" class="btn btn-primary">Login</button>
         </form>
     </main>
       <!-- Bootstrap JS -->
@@ -38,6 +36,3 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
   </body>
 </html>
-
- 
-  
