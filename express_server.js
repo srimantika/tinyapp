@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -14,18 +14,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const users = { 
+const users = {
   "1234": {
-    id: "1234", 
-    email: "test1@tinyurl.com", 
+    id: "1234",
+    email: "test1@tinyurl.com",
     password: "testuser1"
   },
- "12345": {
-    id: "12345", 
-    email: "test2@tinyurl.com", 
+  "12345": {
+    id: "12345",
+    email: "test2@tinyurl.com",
     password: "testuser2"
   }
-}
+};
 
 
 
@@ -58,7 +58,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 //Another route to add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, 
+  const templateVars = { shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.cookies["user_id"]]};
   res.render("urls_show", templateVars);
@@ -68,7 +68,7 @@ app.get("/login", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]]
-  };  
+  };
   res.render("urls_login", templateVars);
 });
 
@@ -77,8 +77,8 @@ app.get("/register", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]]
-  };  
-  res.render("urls_registration", templateVars); 
+  };
+  res.render("urls_registration", templateVars);
 });
 
 //Post Request receive form submission with randomly generated short url String
@@ -116,14 +116,14 @@ app.post("/login", (req, res) => {
   if (pass === false) {
     res.status(403).send("There is no account associated with this email address");
   } else {
-  const userID = userIdFromEmail(email, users);  
-  if (users[userID].password !== password){
-    res.status(403).send("Invalid Password!");
-  } else {
-  res.cookie("user_id", users[userID].id);
-  res.redirect("/urls");
-   }
-  } 
+    const userID = userIdFromEmail(email, users);
+    if (users[userID].password !== password) {
+      res.status(403).send("Invalid Password!");
+    } else {
+      res.cookie("user_id", users[userID].id);
+      res.redirect("/urls");
+    }
+  }
 });
 
 
@@ -132,21 +132,20 @@ app.post("/register", (req, res) => {
   const submittedEmail = req.body.email;
   const submittedPassword = req.body.password;
   if (!submittedEmail || !submittedPassword) {
-  res.status(400).send("Please include a valid email and password to create an Account!");
+    res.status(400).send("Please include a valid email and password to create an Account!");
   } else if (emailHasUser(submittedEmail, users)) {
-  res.status(400).send("An account already exists for this email address!"); 
-  }
-  else {
-  const newUserID = generateRandomString();
-  users[newUserID] = {
-    id: newUserID,
-    email: submittedEmail,
-    password: submittedPassword,
-  }
+    res.status(400).send("An account already exists for this email address!");
+  } else {
+    const newUserID = generateRandomString();
+    users[newUserID] = {
+      id: newUserID,
+      email: submittedEmail,
+      password: submittedPassword,
+    };
     res.cookie("user_id", newUserID);
-    res.redirect("/urls"); 
- }   
-}); 
+    res.redirect("/urls");
+  }
+});
 
 //Post Request for Logout
 app.post("/logout", (req, res) => {
@@ -173,7 +172,7 @@ const userIdFromEmail = function(email, userDatabase) {
 };
 
 //generates a Random String of 6 letters
-const generateRandomString = function () {
+const generateRandomString = function() {
   let randomString = "";
   for (let i = 0; i < 6; i++) {
     const randomCharCode = Math.floor(Math.random() * 26 + 97);
