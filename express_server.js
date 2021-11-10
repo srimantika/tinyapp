@@ -40,11 +40,16 @@ app.get("/urls", (req, res) => {
 
 //A GET route to render the url submission form
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]]
-  };
-  res.render("urls_new", templateVars);
+
+  if (!validUser(req.cookies.user_id, users)) {
+    res.redirect("/login");
+  } else {
+    const templateVars = {
+      urls: urlDatabase,
+      user: users[req.cookies["user_id"]]
+    };
+    res.render("urls_new", templateVars);
+  }
 });
 
 // A GET route to match and handle the Post request of ShortURL form submission
@@ -152,6 +157,18 @@ app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
 });
+
+// Helper Functions
+
+/* Checks if user corresponds with a user in the userDatabase */
+const validUser = function(cookie, userDatabase) {
+  for (const user in userDatabase) {
+    if (cookie === user) {
+      return true;
+    }
+  } return false;
+};
+
 /* Checks if given email corresponds to a user in a given database, returns true or false */
 const emailHasUser = function(email, userDatabase) {
   for (const user in userDatabase) {
