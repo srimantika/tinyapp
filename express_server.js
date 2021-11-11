@@ -5,11 +5,11 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
 
-// Setting ejs as the view engine
+const { generateRandomString, emailHasUser, userIdFromEmail, urlsForUser, cookieHasUser } = require("./helpers");
+
+
 app.set("view engine", "ejs");
-// Set the body-parser
 app.use(bodyParser.urlencoded({ extended: true }));
-//Set the cookieSession
 app.use(cookieSession({
   name: 'tinyappsrimantika',
   keys: ['key1', 'key2']
@@ -101,9 +101,6 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 
-
-
-
 //Post Request receive form submission with randomly generated short url String
 app.post("/urls", (req, res) => {
 
@@ -177,7 +174,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 
-
 //Post Request for EDIT
 app.post("/urls/:id", (req, res) => {
   const userUrls = urlsForUser(req.session.user_id, urlDatabase);
@@ -189,62 +185,6 @@ app.post("/urls/:id", (req, res) => {
     res.status(401).send("You do not have authorization to delete this short URL.");
   }
 });
-
-
-// Helper Functions
-
-/* Checks if user corresponds with a user in the userDatabase */
-const cookieHasUser = function(cookie, userDatabase) {
-  for (const user in userDatabase) {
-    if (cookie === user) {
-      return true;
-    }
-  } return false;
-};
-
-/* Checks if given email corresponds to a user in a given database, returns true or false */
-const emailHasUser = function(email, userDatabase) {
-  for (const user in userDatabase) {
-    if (userDatabase[user].email === email) {
-      return true;
-    }
-  }
-  return false;
-};
-
-/* Takes an email and userDatabase and returns the user ID for the user with the given email address */
-const userIdFromEmail = function(email, userDatabase) {
-  for (const user in userDatabase) {
-    if (userDatabase[user].email === email) {
-      return userDatabase[user].id;
-    }
-  }
-};
-
-//generates a Random String of 6 letters
-const generateRandomString = function() {
-  let randomString = "";
-  for (let i = 0; i < 6; i++) {
-    const randomCharCode = Math.floor(Math.random() * 26 + 97);
-    const randomChar = String.fromCharCode(randomCharCode);
-    randomString += randomChar;
-  }
-  return randomString;
-};
-
-const urlsForUser = (userid, database) => {
-  let userUrls = {};
-
-  for (const shortURL in database) {
-
-    if (database[shortURL].userId === userid) {
-      userUrls[shortURL] = database[shortURL];
-    }
-  }
-
-  return userUrls;
-};
-
 
 
 app.listen(PORT, () => {
