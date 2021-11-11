@@ -32,7 +32,6 @@ app.get("/urls", (req, res) => {
     urls: urlsForUser(req.cookies["user_id"], urlDatabase),
     user: users[req.cookies["user_id"]]
   };
-  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -86,16 +85,16 @@ app.get("/register", (req, res) => {
 //Post Request receive form submission with randomly generated short url String
 app.post("/urls", (req, res) => {
 
-if (req.cookies.user_id) {
-        const shortURL = generateRandomString();
-         urlDatabase[shortURL] = {
-          longURL : req.body.longURL,
-          userId : req.cookies["user_id"]
-        }
-        res.redirect((`/urls`));
-      } else {
-      res.status(401).send("You must be logged in to a valid account to create short URLs.");
-      }
+  if (req.cookies.user_id) {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = {
+      longURL : req.body.longURL,
+      userId : req.cookies["user_id"]
+    };
+    res.redirect((`/urls`));
+  } else {
+    res.status(401).send("You must be logged in to a valid account to create short URLs.");
+  }
 });
 
 //Post Request for DELETE
