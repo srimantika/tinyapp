@@ -9,10 +9,7 @@ app.set("view engine", "ejs");
 // Set the body-parser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+const urlDatabase = {};
 
 const users = {
   "1234": {
@@ -31,10 +28,11 @@ const users = {
 
 //A new route handler for "/urls" with res.render() to pass the URL data to our template.
 app.get("/urls", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
+  let templateVars = {
+    urls: urlsForUser(req.cookies["user_id"], urlDatabase),
     user: users[req.cookies["user_id"]]
   };
+  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -45,7 +43,6 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");
   } else {
     const templateVars = {
-      urls: urlDatabase,
       user: users[req.cookies["user_id"]]
     };
     res.render("urls_new", templateVars);
@@ -55,7 +52,7 @@ app.get("/urls/new", (req, res) => {
 // A GET route to match and handle the Post request of ShortURL form submission
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
-    const longURL = urlDatabase[req.params.shortURL];
+    const longURL = urlDatabase[req.params.shortURL].longURL;
     res.redirect(longURL);
   } else {
     res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.");
@@ -63,8 +60,8 @@ app.get("/u/:shortURL", (req, res) => {
 });
 //Another route to add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+  let templateVars = { shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]]};
   res.render("urls_show", templateVars);
 });
@@ -91,8 +88,11 @@ app.post("/urls", (req, res) => {
 
 if (req.cookies.user_id) {
         const shortURL = generateRandomString();
-        urlDatabase[shortURL] = req.body.longURL;
-        res.redirect((`/urls/${shortURL}`));
+         urlDatabase[shortURL] = {
+          longURL : req.body.longURL,
+          userId : req.cookies["user_id"]
+        }
+        res.redirect((`/urls`));
       } else {
       res.status(401).send("You must be logged in to a valid account to create short URLs.");
       }
@@ -110,7 +110,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //Post Request for EDIT
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
-  urlDatabase[shortURL] = req.body.newURL;
+  urlDatabase[shortURL].longURL = req.body.newURL;
   res.redirect('/urls');
 });
 
@@ -198,6 +198,19 @@ const generateRandomString = function() {
     randomString += randomChar;
   }
   return randomString;
+};
+
+const urlsForUser = (userid, database) => {
+  let userUrls = {};
+
+  for (const shortURL in database) {
+
+    if (database[shortURL].userId === userid) {
+      userUrls[shortURL] = database[shortURL];
+    }
+  }
+
+  return userUrls;
 };
 
 
