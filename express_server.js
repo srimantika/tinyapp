@@ -99,18 +99,28 @@ app.post("/urls", (req, res) => {
 
 //Post Request for DELETE
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const idToDelete = req.params.shortURL;
-  delete urlDatabase[idToDelete];
-  res.redirect("/urls");
-});
+  const userUrls = urlsForUser(req.cookies["user_id"], urlDatabase);
+  if (Object.keys(userUrls).includes(req.params.shortURL)) {
+    const idToDelete = req.params.shortURL;
+    delete urlDatabase[idToDelete];
+    res.redirect("/urls");
+  } else {
+  res.status(401).send("You do not have authorization to delete this short URL.");
+  }
+  });
 
 
 
 //Post Request for EDIT
 app.post("/urls/:id", (req, res) => {
+  const userUrls = urlsForUser(req.cookies["user_id"], urlDatabase);
   const shortURL = req.params.id;
+  if (Object.keys(userUrls).includes(shortURL)) {
   urlDatabase[shortURL].longURL = req.body.newURL;
   res.redirect('/urls');
+  } else {
+  res.status(401).send("You do not have authorization to delete this short URL.");
+  }  
 });
 
 //Post Request for Login
