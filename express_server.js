@@ -13,13 +13,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'tinyappsrimantika',
   keys: ['key1', 'key2']
-}))
+}));
 
 
 const urlDatabase = {};
 const users = {};
 
-
+// Home page with proper redirects
+app.get("/", (req, res) => {
+  if (cookieHasUser(req.session.user_id, users)) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+});
 
 //A new route handler for "/urls" with res.render() to pass the URL data to our template.
 app.get("/urls", (req, res) => {
@@ -33,13 +40,25 @@ app.get("/urls", (req, res) => {
 //A GET route to render the url submission form
 app.get("/urls/new", (req, res) => {
 
-  if (!validUser(req.session.user_id, users)) {
-    res.redirect("/login");
-  } else {
-    const templateVars = {
+  if (cookieHasUser(req.session.user_id, users)) {
+    let templateVars = {
       user: users[req.session.user_id]
     };
     res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
+});
+
+//A GET route for Register
+app.get("/register", (req, res) => {
+  if (cookieHasUser(req.session.user_id, users)) {
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      user: users[req.session.user_id]
+    };
+    res.render("urls_registration", templateVars);
   }
 });
 
@@ -47,35 +66,43 @@ app.get("/urls/new", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     const longURL = urlDatabase[req.params.shortURL].longURL;
-    res.redirect(longURL);
+    if (longURL === undefined) {
+      res.status(302);
+    } else {
+      res.redirect(longURL);
+    }
   } else {
     res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.");
   }
 });
-//Another route to add another page to display a single URL and its shortened form
-app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session.user_id]};
-  res.render("urls_show", templateVars);
-});
+
 //A GET route for Login
 app.get("/login", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.session.user_id]
-  };
-  res.render("urls_login", templateVars);
+  if (cookieHasUser(req.session.user_id, users)) {
+    res.redirect("/urls");
+  } else {
+    let templateVars = {
+      user: users[req.session.user_id]
+    };
+    res.render("urls_login", templateVars);
+  }
 });
 
-//A GET route for Register
-app.get("/register", (req, res) => {
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[req.session.user_id]
-  };
-  res.render("urls_registration", templateVars);
+//Another route to add another page to display a single URL and its shortened form
+app.get("/urls/:shortURL", (req, res) => {
+  if (urlDatabase[req.params.shortURL]) {
+    let templateVars = { shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      user: users[req.session.user_id]};
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(404).send("The short URL you entered does not correspond with a long URL at this time.");
+  }
 });
+
+
+
+
 
 //Post Request receive form submission with randomly generated short url String
 app.post("/urls", (req, res) => {
@@ -92,12 +119,57 @@ app.post("/urls", (req, res) => {
   }
 });
 
+//Post Request for Register
+app.post("/register", (req, res) => {
+  const submittedEmail = req.body.email;
+  const submittedPassword = req.body.password;
+  if (!submittedEmail || !submittedPassword) {
+    res.status(400).send("Please include a valid email and password to create an Account!");
+  } else if (emailHasUser(submittedEmail, users)) {
+    res.status(400).send("An account already exists for this email address!");
+  } else {
+    const newUserID = generateRandomString();
+    users[newUserID] = {
+      id: newUserID,
+      email: submittedEmail,
+      password: bcrypt.hashSync(submittedPassword, 10),
+    };
+    req.session.user_id = newUserID;
+    res.redirect("/urls");
+  }
+});
+
+//Post Request for Login
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const pass = emailHasUser(email,users);
+  if (pass === false) {
+    res.status(403).send("There is no account associated with this email address");
+  } else {
+    const userID = userIdFromEmail(email, users);
+    if (!bcrypt.compareSync(password, users[userID].password)) {
+      res.status(403).send("Invalid Password!");
+    } else {
+      req.session.user_id = userID;
+      res.redirect("/urls");
+    }
+  }
+});
+
+//Post Request for Logout
+app.post("/logout", (req, res) => {
+  req.session = null;
+  res.redirect("/urls");
+});
+
+
 //Post Request for DELETE
 app.post("/urls/:shortURL/delete", (req, res) => {
   const userUrls = urlsForUser(req.session.user_id, urlDatabase);
   if (Object.keys(userUrls).includes(req.params.shortURL)) {
-    const idToDelete = req.params.shortURL;
-    delete urlDatabase[idToDelete];
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
     res.redirect("/urls");
   } else {
     res.status(401).send("You do not have authorization to delete this short URL.");
@@ -118,55 +190,11 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
-//Post Request for Login
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const pass = emailHasUser(email,users);
-  if (pass === false) {
-    res.status(403).send("There is no account associated with this email address");
-  } else {
-    const userID = userIdFromEmail(email, users);
-    if (!bcrypt.compareSync(password, users[userID].password)) {
-      res.status(403).send("Invalid Password!");
-    } else {
-      res.cookie("user_id", users[userID].id);
-      res.redirect("/urls");
-    }
-  }
-});
-
-
-//Post Request for Register
-app.post("/register", (req, res) => {
-  const submittedEmail = req.body.email;
-  const submittedPassword = req.body.password;
-  if (!submittedEmail || !submittedPassword) {
-    res.status(400).send("Please include a valid email and password to create an Account!");
-  } else if (emailHasUser(submittedEmail, users)) {
-    res.status(400).send("An account already exists for this email address!");
-  } else {
-    const newUserID = generateRandomString();
-    users[newUserID] = {
-      id: newUserID,
-      email: submittedEmail,
-      password: bcrypt.hashSync(submittedPassword, 10),
-    };
-    req.session.user_id = "newUserID";
-    res.redirect("/urls");
-  }
-});
-
-//Post Request for Logout
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/urls");
-});
 
 // Helper Functions
 
 /* Checks if user corresponds with a user in the userDatabase */
-const validUser = function(cookie, userDatabase) {
+const cookieHasUser = function(cookie, userDatabase) {
   for (const user in userDatabase) {
     if (cookie === user) {
       return true;
